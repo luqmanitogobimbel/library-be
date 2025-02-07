@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { status } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
@@ -53,7 +54,29 @@ export class BooksDto {
   @IsString()
   status?: string;
 }
-export class UpdateBooksDto {
+export class TodoDto {
+  @ApiProperty({
+    required: true,
+    example: 'Laskar Pelangi',
+    description: 'Input book title',
+  })
+  @Type(() => String)
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty({
+    required: true,
+    example: 'Dede',
+    description: 'Input book author',
+  })
+  @Type(() => String)
+  @IsString()
+  @IsNotEmpty()
+  description: string;
+}
+
+export class UpdateTodoDto {
   @ApiProperty({
     required: false,
     example: 'Laskar Pelangi',
@@ -62,7 +85,7 @@ export class UpdateBooksDto {
   @Type(() => String)
   @IsString()
   @IsOptional()
-  title?: string;
+  name?: string;
 
   @ApiProperty({
     required: false,
@@ -72,17 +95,17 @@ export class UpdateBooksDto {
   @Type(() => String)
   @IsString()
   @IsOptional()
-  author?: string;
+  description?: string;
 
   @ApiProperty({
-    required: true,
+    required: false,
     example: 1,
     description: 'Input book quantity',
   })
   @Type(() => Number)
   @IsInt()
-  @IsNotEmpty()
-  stock: number;
+  @IsOptional()
+  assigne_id?: number;
 
   @ApiProperty({
     required: false,
@@ -92,5 +115,5 @@ export class UpdateBooksDto {
   @Type(() => String)
   @IsOptional()
   @IsString()
-  status?: string;
+  status?: status;
 }

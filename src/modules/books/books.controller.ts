@@ -6,38 +6,45 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Request,
   Post,
   Query,
   SetMetadata,
   UseGuards,
 } from '@nestjs/common';
 import { BooksService } from './books.service';
-import { BooksDto, QueryParams, SUCCESS_STATUS } from 'src/dto';
+import {
+  BooksDto,
+  QueryParams,
+  SUCCESS_STATUS,
+  TodoDto,
+  UpdateTodoDto,
+} from 'src/dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RolesGuard } from 'src/utils/roles.guard';
 import { JwtAuthGuard } from 'src/utils/jwt-auth.guard';
 
-@Controller('books')
+@Controller('todo')
 @ApiTags('Books')
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @SetMetadata('roles', ['admin'])
+  @SetMetadata('roles', ['lead'])
   @ApiOperation({
-    summary: 'Input Book',
-    description: 'Input Barang ke Unit',
+    summary: 'Input Todo',
+    description: 'Input Todo ',
   })
-  async post(@Body() dto: BooksDto) {
+  async postTodo(@Body() dto: TodoDto, @Request() req: any) {
     try {
-      const data = await this.booksService.post(dto);
+      const data = await this.booksService.postTodo(dto, req.user.userId);
       return {
         data: data,
         _meta: {
           code: HttpStatus.CREATED,
           status: SUCCESS_STATUS,
-          message: 'success post books',
+          message: 'success post todo',
         },
       };
     } catch (error) {
@@ -46,21 +53,29 @@ export class BooksController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard)
-  @SetMetadata('role', ['admin', 'editor'])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @SetMetadata('roles', ['lead'])
   @ApiOperation({
-    summary: 'Update Book',
-    description: 'Update Book',
+    summary: 'Update Todo',
+    description: 'Update Todo',
   })
-  async update(@Param('id') id: string, @Body() dto: BooksDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateTodoDto,
+    @Request() req: any,
+  ) {
     try {
-      const data = await this.booksService.update(+id, dto);
+      const data = await this.booksService.updateTodo(
+        +id,
+        dto,
+        req.user.userId,
+      );
       return {
         data: data,
         _meta: {
           code: HttpStatus.OK,
           status: SUCCESS_STATUS,
-          message: 'success update books',
+          message: 'success update todo',
         },
       };
     } catch (error) {
@@ -94,9 +109,9 @@ export class BooksController {
     summary: 'Get Books',
     description: 'Get books using query params',
   })
-  async get(@Query() params: QueryParams) {
+  async getTodo(@Query() params: QueryParams) {
     try {
-      const { total_data, data } = await this.booksService.get(params);
+      const { total_data, data } = await this.booksService.getTodo(params);
 
       const metadata = {
         total_count: total_data,
@@ -116,7 +131,7 @@ export class BooksController {
         _meta: {
           code: HttpStatus.OK,
           status: SUCCESS_STATUS,
-          message: 'success get books',
+          message: 'success get todo',
         },
       };
     } catch (error) {

@@ -24,7 +24,7 @@ import { JwtStrategy } from './utils/jwt';
     ServiceModule,
     PassportModule,
     JwtModule.register({
-      secret: 'heavenshell',
+      secret: process.env.SECRET_KEY,
       signOptions: { expiresIn: '1h' },
     }),
 

@@ -27,6 +27,24 @@ export class AuthController {
       throw error;
     }
   }
+
+  @Post('team')
+  async createTeam(@Body() body: { email: string; password: string }) {
+    try {
+      const data = await this.authService.createTeam(body);
+      return {
+        data: data,
+        _meta: {
+          code: HttpStatus.CREATED,
+          status: SUCCESS_STATUS,
+          message: 'success create account',
+        },
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
   @Post('login')
   async login(@Body() body: { email: string; password: string }) {
     try {

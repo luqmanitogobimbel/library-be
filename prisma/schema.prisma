@@ -19,6 +19,27 @@ model books {
   circulation circulation[]
 }
 
+model todo {
+  id          Int       @id(map: "todo_pk") @default(autoincrement())
+  name        String?   @db.VarChar
+  assigne_id  Int?
+  description String?
+  last_update DateTime? @updatedAt @db.Timestamp(6)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  status      status?
+  user        user?     @relation(fields: [assigne_id], references: [id])
+}
+
+model todo_audit_log {
+  id         Int      @id @default(autoincrement())
+  operation  String
+  todo_id    Int
+  user_id    Int?
+  old_data   Json?
+  new_data   Json
+  created_at DateTime @default(now())
+}
+
 model user {
   id         Int      @id @default(autoincrement())
   email      String   @unique
@@ -27,6 +48,7 @@ model user {
   member_id  Int?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  todo       todo[]
   member     member?  @relation(fields: [member_id], references: [id])
 }
 
@@ -52,4 +74,11 @@ model circulation {
   returned_at DateTime? @db.Date
   books       books     @relation(fields: [books_id], references: [id])
   member      member    @relation(fields: [member_id], references: [id])
+}
+
+enum status {
+  not_started
+  on_progress
+  done
+  reject
 }

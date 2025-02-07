@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { BooksDto, QueryParams, UpdateBooksDto } from 'src/dto';
+import { status } from '@prisma/client';
+import { BooksDto, QueryParams, TodoDto, UpdateTodoDto } from 'src/dto';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -7,14 +8,22 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class BooksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async post(dto: BooksDto) {
+  async postTodo(dto: TodoDto, user_id: number) {
     const result = await this.prisma.$transaction(async (prisma) => {
-      const data = await prisma.books.create({
+      const data = await prisma.todo.create({
         data: {
-          title: dto.title,
-          author: dto.author,
-          stock: dto.stock,
-          code: dto.code,
+          name: dto.name,
+          description: dto.description,
+          status: status.not_started,
+        },
+      });
+
+      await prisma.todo_audit_log.create({
+        data: {
+          operation: 'CREATE',
+          user_id,
+          todo_id: data.id,
+          new_data: data,
         },
       });
 
@@ -23,16 +32,29 @@ export class BooksService {
     return result;
   }
 
-  async update(id: number, dto: UpdateBooksDto) {
+  async updateTodo(id: number, dto: UpdateTodoDto, user_id: number) {
     const result = await this.prisma.$transaction(async (prisma) => {
-      const data = await prisma.books.update({
-        where: {
-          id: id,
-        },
+      const oldData = await prisma.todo.findUnique({
+        where: { id: id },
+      });
+
+      const data = await prisma.todo.update({
+        where: { id: id },
         data: {
-          title: dto.title,
-          author: dto.author,
-          stock: dto.stock,
+          name: dto.name,
+          description: dto.description,
+          assigne_id: dto.assigne_id,
+          status: dto.status,
+        },
+      });
+
+      await prisma.todo_audit_log.create({
+        data: {
+          operation: 'UPDATE',
+          todo_id: id,
+          user_id,
+          old_data: oldData,
+          new_data: data,
         },
       });
 
@@ -54,7 +76,8 @@ export class BooksService {
     return result;
   }
 
-  async get(params: QueryParams) {
+ 
+  async getTodo(params: QueryParams) {
     const skip = params.page ? (params.page - 1) * params.per_page : 0;
     const query = [];
 
@@ -68,12 +91,12 @@ export class BooksService {
     }
 
     const [total_data, data] = await Promise.all([
-      this.prisma.books.count({
+      this.prisma.todo.count({
         where: {
           AND: query,
         },
       }),
-      this.prisma.books.findMany({
+      this.prisma.todo.findMany({
         skip: params.is_all_data ? undefined : skip,
         take: params.is_all_data ? undefined : params.per_page,
         where: {
